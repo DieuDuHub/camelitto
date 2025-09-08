@@ -1,0 +1,76 @@
+@startuml system-architecture
+!theme plain
+title Spring Boot + Apache Camel Integration System Architecture
+
+package "Spring Boot Application" {
+    package "REST Controllers" {
+        [HealthController] as HC
+        [ApiController] as AC
+        [CamelController] as CC
+    }
+    
+    package "Apache Camel" {
+        [JsonTransformRoute] as JTR
+        [PersonDataRoute] as PDR
+        [JsonTransformProcessor] as JTP
+        [PersonDataProcessor] as PDP
+    }
+    
+    package "Spring Boot Infrastructure" {
+        [CamelContext] as CTX
+        [ProducerTemplate] as PT
+        [Spring Boot Actuator] as SBA
+    }
+}
+
+package "External Systems" {
+    [JSONPlaceholder API] as JPAPI
+    [Person Data API] as PDAPI
+}
+
+package "Endpoints" {
+    [/api/alive] as ALIVE
+    [/api/health] as HEALTH
+    [/api/camel/transform] as TRANSFORM
+    [/api/camel/routes] as ROUTES
+    [/api/person] as PERSON
+    [/actuator/*] as ACTUATOR
+}
+
+' REST API connections
+HC --> ALIVE
+HC --> HEALTH
+AC --> ALIVE
+CC --> TRANSFORM
+CC --> ROUTES
+CC --> PERSON
+
+' Camel route connections
+CC --> CTX : uses
+CC --> PT : uses
+CTX --> JTR : manages
+CTX --> PDR : manages
+JTR --> JTP : processes
+PDR --> PDP : processes
+
+' External API calls
+JTR --> JPAPI : HTTP GET
+PDR --> PDAPI : HTTP GET
+
+' Actuator endpoints
+SBA --> ACTUATOR
+
+note right of PDAPI
+  Returns person data with
+  id, first_name, last_name,
+  email, phone, birth_date,
+  gender, address info, etc.
+end note
+
+note right of PERSON
+  Returns filtered JSON with
+  only first_name, last_name,
+  and creation_date
+end note
+
+@enduml

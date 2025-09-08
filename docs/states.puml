@@ -1,0 +1,37 @@
+@startuml Route_State_Management
+!theme plain
+title Camel Route State Management
+
+state "Route States" as RS {
+    state "Started" as Started
+    state "Stopped" as Stopped
+    state "Suspended" as Suspended
+}
+
+[*] --> Started : Application startup\nAuto-start enabled
+
+Started --> Stopped : POST /api/camel/routes/{id}/stop
+Stopped --> Started : POST /api/camel/routes/{id}/start
+Started --> Suspended : Suspend route
+Suspended --> Started : Resume route
+
+Started : Route is active
+Started : Timer triggers every 30s
+Started : Can process messages
+
+Stopped : Route is inactive
+Stopped : No message processing
+Stopped : Timer is stopped
+
+Suspended : Route is paused
+Suspended : No new messages
+Suspended : Existing messages continue
+
+note bottom
+Available routes:
+- json-transform-route (timer)
+- process-transformed-data (direct)
+- manual-transform-route (direct)
+end note
+
+@enduml

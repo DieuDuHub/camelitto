@@ -1,0 +1,66 @@
+@startuml camel-routes-flow
+!theme plain
+title Apache Camel Routes Data Flow
+
+package "Timer Route (Automatic)" {
+    (Timer) as T1
+    (HTTP Client) as H1
+    (JSON Transform\nProcessor) as P1
+    (Direct Route) as D1
+    
+    T1 --> H1 : Every 30 seconds
+    H1 --> P1 : JSON response
+    P1 --> D1 : Transformed data
+}
+
+package "Manual Transform Route" {
+    (Direct Manual) as D2
+    (HTTP Client) as H2
+    (JSON Transform\nProcessor) as P2
+    
+    D2 --> H2 : On demand
+    H2 --> P2 : JSON response
+}
+
+package "Person Data Route" {
+    (Direct Person) as D3
+    (HTTP Client) as H3
+    (Person Data\nProcessor) as P3
+    
+    D3 --> H3 : On REST API call
+    H3 --> P3 : Person data JSON
+}
+
+package "Process Route" {
+    (Direct Process) as D1
+    (Data Processor) as P4
+    (Logger) as L1
+    
+    D1 --> P4 : Any transformed data
+    P4 --> L1 : Add metadata
+}
+
+cloud "External APIs" {
+    [JSONPlaceholder\nAPI] as EXT1
+    [Person Data\nAPI] as EXT2
+}
+
+H1 --> EXT1 : GET /posts/1
+H2 --> EXT1 : GET /posts/2
+H3 --> EXT2 : GET /person_data/1
+
+note right of P3
+  Filters response to extract:
+  - first_name
+  - last_name 
+  - creation_date (from created_at)
+end note
+
+note right of P1
+  Transforms JSONPlaceholder data:
+  - Uppercase title with prefix
+  - Summary generation
+  - Add metadata
+end note
+
+@enduml

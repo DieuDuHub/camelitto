@@ -1,0 +1,62 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: camel-springboot-app
+  
+  # Configuration pour les profils
+  profiles:
+    active: dev
+
+# Configuration de Spring Boot Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,camel
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# Configuration Apache Camel
+camel:
+  springboot:
+    name: CamelSpringBootApp
+    main-run-controller: true
+    auto-startup: true
+  component:
+    timer:
+      basic-property-binding: true
+  dataformat:
+    jackson:
+      auto-discover-object-mapper: true
+
+# Configuration de logging
+logging:
+  level:
+    com.example.camel: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# External API Configuration
+person:
+  api:
+    base-url: http://localhost:8001
+
+# Application information
+info:
+  app:
+    name: ${spring.application.name}
+    description: Application Spring Boot 3 avec API REST
+    version: 1.0.0
+    java:
+      version: 17

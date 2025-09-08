@@ -1,0 +1,80 @@
+@startuml component-diagram
+!theme plain
+title Component Diagram - Spring Boot Camel Application
+
+package "Spring Boot Application" <<rectangle>> {
+    
+    package "Web Layer" <<rectangle>> {
+        component [HealthController] as HC
+        component [ApiController] as AC  
+        component [CamelController] as CC
+    }
+    
+    package "Camel Integration Layer" <<rectangle>> {
+        component [JsonTransformRoute] as JTR
+        component [PersonDataRoute] as PDR
+        
+        package "Processors" <<rectangle>> {
+            component [JsonTransformProcessor] as JTP
+            component [PersonDataProcessor] as PDP
+        }
+    }
+    
+    package "Spring Boot Core" <<rectangle>> {
+        component [CamelContext] as CTX
+        component [ProducerTemplate] as PT
+        component [Spring Boot Actuator] as SBA
+    }
+}
+
+package "External Services" <<cloud>> {
+    component [JSONPlaceholder API] as JPAPI
+    component [Person Data API] as PDAPI
+}
+
+' Web Layer relationships
+HC --> SBA : health checks
+CC --> CTX : route management
+CC --> PT : message sending
+
+' Camel Layer relationships
+CTX --> JTR : manages
+CTX --> PDR : manages
+JTR --> JTP : uses
+PDR --> PDP : uses
+
+' External API relationships
+JTR --> JPAPI : HTTP calls
+PDR --> PDAPI : HTTP calls
+
+' Internal routing
+JTR --> JTR : direct:processTransformedData
+
+interface "REST API" as REST
+interface "Camel Routes" as CAMEL
+interface "Management" as MGMT
+
+HC --> REST
+AC --> REST
+CC --> REST
+JTR --> CAMEL
+PDR --> CAMEL
+SBA --> MGMT
+
+note right of PDP
+  Responsible for:
+  - Parsing Person API response
+  - Extracting required fields
+  - Date format conversion
+  - JSON structure transformation
+end note
+
+note right of JTP
+  Responsible for:
+  - JSONPlaceholder data transformation
+  - Title case conversion
+  - Summary generation
+  - Metadata enrichment
+end note
+
+@enduml

@@ -1,0 +1,50 @@
+@startuml sequence-person-data
+!theme plain
+title Person Data API Integration Sequence Diagram
+
+actor "Client" as C
+participant "CamelController" as CC
+participant "ProducerTemplate" as PT
+participant "PersonDataRoute" as PDR
+participant "PersonDataProcessor" as PDP
+participant "Person Data API" as PDAPI
+
+C -> CC : POST /api/person
+activate CC
+
+CC -> PT : requestBody("direct:personData", "")
+activate PT
+
+PT -> PDR : trigger route
+activate PDR
+
+PDR -> PDAPI : HTTP GET\nhttp://localhost:8001/person_data/1
+activate PDAPI
+
+PDAPI --> PDR : JSON Response\n{"Ok":{"id":1,"first_name":"Jean",\n"last_name":"Dupont","email":"...",\n"created_at":"2025-08-19T09:25:30.135028Z",...}}
+deactivate PDAPI
+
+PDR -> PDP : process(exchange)
+activate PDP
+
+note right of PDP
+  Extract and transform data:
+  - Parse JSON response
+  - Extract first_name, last_name
+  - Extract created_at as creation_date
+  - Create filtered JSON response
+end note
+
+PDP --> PDR : Filtered JSON\n{"first_name":"Jean",\n"last_name":"Dupont",\n"creation_date":"2025-08-19T09:25:30.135028Z"}
+deactivate PDP
+
+PDR --> PT : Transformed data
+deactivate PDR
+
+PT --> CC : Result JSON
+deactivate PT
+
+CC --> C : HTTP 200\n{"status":"success",\n"data": filtered_json,\n"timestamp": current_time}
+deactivate CC
+
+@enduml

@@ -1,0 +1,56 @@
+@startuml Component_Diagram
+!theme plain
+title Component Diagram - Internal Structure
+
+package "com.example.camel" {
+    
+    package "controller" {
+        class HealthController {
+            +alive(): ResponseEntity
+            +health(): ResponseEntity
+        }
+        
+        class ApiController {
+            +welcome(): ResponseEntity
+            +info(): ResponseEntity
+            +echo(payload): ResponseEntity
+        }
+        
+        class CamelController {
+            -producerTemplate: ProducerTemplate
+            -camelContext: CamelContext
+            +triggerTransform(): ResponseEntity
+            +getRoutes(): ResponseEntity
+            +startRoute(routeId): ResponseEntity
+            +stopRoute(routeId): ResponseEntity
+        }
+    }
+    
+    package "route" {
+        class JsonTransformRoute {
+            +configure(): void
+        }
+        
+        class JsonTransformProcessor {
+            -objectMapper: ObjectMapper
+            +process(exchange): void
+        }
+    }
+    
+    package "main" {
+        class CamelSpringBootApplication {
+            +main(args): void
+        }
+    }
+}
+
+' Relationships
+CamelController --> "1" ProducerTemplate
+CamelController --> "1" CamelContext
+JsonTransformRoute --> "1" JsonTransformProcessor
+CamelSpringBootApplication --> "*" HealthController
+CamelSpringBootApplication --> "*" ApiController
+CamelSpringBootApplication --> "*" CamelController
+CamelSpringBootApplication --> "*" JsonTransformRoute
+
+@enduml

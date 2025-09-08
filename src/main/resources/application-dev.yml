@@ -1,0 +1,19 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example.camel: DEBUG
+    org.springframework: INFO
+
+# Configuration spécifique au développement
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

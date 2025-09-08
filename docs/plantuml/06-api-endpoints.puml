@@ -1,0 +1,93 @@
+@startuml api-endpoints
+!theme plain
+title REST API Endpoints Overview
+
+package "Health & Status APIs" {
+    rectangle "/api/alive" as ALIVE {
+        note right
+            Method: GET
+            Returns: Application status
+            Response: {
+                "status": "alive",
+                "timestamp": "...",
+                "application": "camel-springboot-app",
+                "version": "1.0.0"
+            }
+        end note
+    }
+    
+    rectangle "/api/health" as HEALTH {
+        note right
+            Method: GET
+            Returns: Detailed health status
+            Response: {
+                "status": "UP",
+                "timestamp": "...",
+                "components": {...}
+            }
+        end note
+    }
+}
+
+package "Camel Management APIs" {
+    rectangle "/api/camel/routes" as ROUTES {
+        note right
+            Method: GET
+            Returns: List of all Camel routes
+            Response: {
+                "status": "success",
+                "totalRoutes": 3,
+                "routes": [...]
+            }
+        end note
+    }
+    
+    rectangle "/api/camel/transform" as TRANSFORM {
+        note right
+            Method: POST
+            Action: Trigger manual JSON transformation
+            Returns: Transformed JSONPlaceholder data
+        end note
+    }
+    
+    rectangle "/api/person" as PERSON {
+        note right
+            Method: POST
+            Action: Fetch and filter person data
+            Returns: {
+                "status": "success",
+                "data": {
+                    "first_name": "Jean",
+                    "last_name": "Dupont", 
+                    "creation_date": "2025-08-19T09:25:30.135028Z"
+                },
+                "timestamp": "..."
+            }
+        end note
+    }
+    
+    rectangle "/api/camel/routes/{routeId}/start" as START {
+        note right
+            Method: POST
+            Action: Start specific Camel route
+            Parameters: routeId (path)
+        end note
+    }
+    
+    rectangle "/api/camel/routes/{routeId}/stop" as STOP {
+        note right
+            Method: POST
+            Action: Stop specific Camel route
+            Parameters: routeId (path)
+        end note
+    }
+}
+
+package "Spring Boot Actuator" {
+    rectangle "/actuator/health" as ACT_HEALTH
+    rectangle "/actuator/info" as ACT_INFO
+    rectangle "/actuator/metrics" as ACT_METRICS
+    rectangle "/actuator/camel" as ACT_CAMEL
+}
+
+@enduml

@@ -1,0 +1,46 @@
+@startuml Deployment_Diagram
+!theme plain
+title Deployment Architecture
+
+node "Development Environment" {
+    artifact "camel-springboot-app-1.0.0.jar" as JAR {
+        component "Spring Boot 3.2.0" as SB
+        component "Apache Camel 4.2.0" as AC
+        component "Embedded Tomcat" as ET
+    }
+    
+    database "Configuration Files" as CF {
+        file "application.yml"
+        file "application-dev.yml"
+        file "application-test.yml"
+    }
+}
+
+cloud "External Services" {
+    interface "JSONPlaceholder API" as JPAPI
+    note bottom of JPAPI
+    https://jsonplaceholder.typicode.com
+    - /posts/1 (automatic route)
+    - /posts/2 (manual route)
+    end note
+}
+
+node "Client Applications" {
+    artifact "Web Browser" as WB
+    artifact "REST Client" as RC
+    artifact "curl/Postman" as CP
+}
+
+' Connections
+JAR --> JPAPI : HTTP GET requests
+WB --> JAR : HTTP REST calls
+RC --> JAR : HTTP REST calls
+CP --> JAR : HTTP REST calls
+CF --> JAR : Configuration
+
+' Ports and protocols
+JAR : Port 8080-8083 (configurable)
+JAR : HTTP/HTTPS
+JPAPI : Port 443 (HTTPS)
+
+@enduml

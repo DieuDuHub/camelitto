@@ -1,0 +1,71 @@
+@startuml Health_Check_Sequence
+!theme plain
+title Health Check API Sequence
+
+actor "Client" as C
+participant "HealthController" as HC
+participant "Spring Boot" as SB
+
+C -> HC: GET /api/alive
+activate HC
+HC -> HC: Create response map
+HC -> HC: Add status, timestamp, version
+HC -> C: ResponseEntity<Map>
+deactivate HC
+
+note right of C
+Response:
+{
+  "status": "alive",
+  "timestamp": "2025-09-08T10:30:00",
+  "application": "camel-springboot-app",
+  "version": "1.0.0"
+}
+end note
+
+@enduml
+
+@startuml Manual_Transform_Sequence
+!theme plain
+title Manual Transformation Sequence
+
+actor "Client" as C
+participant "CamelController" as CC
+participant "ProducerTemplate" as PT
+participant "JsonTransformRoute" as JTR
+participant "JsonTransformProcessor" as JTP
+participant "External API" as API
+
+C -> CC: POST /api/camel/transform
+activate CC
+
+CC -> PT: requestBody("direct:manualTransform", "")
+activate PT
+
+PT -> JTR: Trigger manual-transform-route
+activate JTR
+
+JTR -> API: GET /posts/2
+activate API
+API -> JTR: JSON response
+deactivate API
+
+JTR -> JTP: process(exchange)
+activate JTP
+JTP -> JTP: Parse JSON
+JTP -> JTP: Transform data
+JTP -> JTP: Create new JSON
+JTP -> JTR: Transformed JSON
+deactivate JTP
+
+JTR -> PT: Return result
+deactivate JTR
+
+PT -> CC: Transformed JSON string
+deactivate PT
+
+CC -> CC: Create response map
+CC -> C: ResponseEntity with transformed data
+deactivate CC
+
+@enduml

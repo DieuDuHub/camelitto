@@ -1,0 +1,48 @@
+@startuml API_Endpoints_Overview
+!theme plain
+title REST API Endpoints Overview
+
+package "Health & Info APIs" {
+    [GET /api/alive] as Alive
+    [GET /api/health] as Health
+    [GET /api/welcome] as Welcome
+    [GET /api/info] as Info
+    [POST /api/echo] as Echo
+}
+
+package "Camel Management APIs" {
+    [POST /api/camel/transform] as Transform
+    [GET /api/camel/routes] as Routes
+    [POST /api/camel/routes/{id}/start] as Start
+    [POST /api/camel/routes/{id}/stop] as Stop
+}
+
+package "Spring Boot Actuator" {
+    [GET /actuator/health] as ActHealth
+    [GET /actuator/info] as ActInfo
+    [GET /actuator/metrics] as ActMetrics
+    [GET /actuator/env] as ActEnv
+    [GET /actuator/camel] as ActCamel
+}
+
+note right of Alive
+Returns application status
+with timestamp and version
+end note
+
+note right of Transform
+Triggers manual JSON
+transformation from external API
+end note
+
+note right of Routes
+Lists all Camel routes
+with their current status
+end note
+
+note bottom of ActCamel
+Camel-specific actuator endpoints
+for monitoring and management
+end note
+
+@enduml

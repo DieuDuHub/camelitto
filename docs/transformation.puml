@@ -1,0 +1,62 @@
+@startuml JSON_Transformation_Process
+!theme plain
+title JSON Transformation Process Flow
+
+start
+
+:Receive JSON Input;
+note right
+Input example:
+{
+  "id": 1,
+  "title": "sample title",
+  "body": "sample body content...",
+  "userId": 123
+}
+end note
+
+:Parse JSON with ObjectMapper;
+
+:Extract fields;
+split
+:Extract id;
+split again
+:Extract title;
+split again
+:Extract body;
+split again
+:Extract userId;
+end split
+
+:Create transformed object;
+note right
+Transformation rules:
+- originalId = id
+- transformedTitle = "TRANSFORMED: " + title.toUpperCase()
+- summary = body.substring(0, 50) + "..."
+- userId = userId
+- transformationTimestamp = System.currentTimeMillis()
+- source = "external-api"
+end note
+
+:Convert to JSON string;
+
+:Set as exchange body;
+
+:Add Content-Type header;
+
+stop
+
+note bottom
+Output example:
+{
+  "originalId": 1,
+  "transformedTitle": "TRANSFORMED: SAMPLE TITLE",
+  "summary": "sample body content...",
+  "userId": 123,
+  "transformationTimestamp": 1725795600000,
+  "source": "external-api"
+}
+end note
+
+@enduml

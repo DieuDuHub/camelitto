@@ -1,0 +1,81 @@
+@startuml data-transformation
+!theme plain
+title Data Transformation Flow
+
+package "Input Data Sources" {
+    rectangle "JSONPlaceholder API" as JP {
+        json "JSON Response" as JP_JSON {
+            "id": 1,
+            "title": "sunt aut facere...",
+            "body": "quia et suscipit...",
+            "userId": 1
+        }
+    }
+    
+    rectangle "Person Data API" as PD {
+        json "Person Response" as PD_JSON {
+            "Ok": {
+                "id": 1,
+                "first_name": "Jean",
+                "last_name": "Dupont",
+                "email": "jean.dupont@test.com",
+                "phone": "+33123456789",
+                "birth_date": "1990-05-15",
+                "created_at": "2025-08-19T09:25:30.135028Z",
+                "updated_at": "2025-08-19T09:25:30.135028Z",
+                "is_active": true
+            }
+        }
+    }
+}
+
+package "Transformation Processors" {
+    rectangle "JsonTransformProcessor" as JTP {
+        note right
+            - Parse input JSON
+            - Transform title to uppercase
+            - Generate summary (first 50 chars)
+            - Add transformation metadata
+            - Set source identifier
+        end note
+    }
+    
+    rectangle "PersonDataProcessor" as PDP {
+        note right
+            - Extract "Ok" object from response
+            - Filter required fields only
+            - Rename created_at to creation_date
+            - Maintain original date format
+            - Create clean JSON structure
+        end note
+    }
+}
+
+package "Output Data" {
+    rectangle "Transformed JSONPlaceholder" as TJP {
+        json "Transformed JSON" as TJP_JSON {
+            "originalId": 1,
+            "transformedTitle": "TRANSFORMED: SUNT AUT FACERE...",
+            "summary": "quia et suscipit\\nsuscipit recusandae...",
+            "userId": 1,
+            "transformationTimestamp": 1757334844005,
+            "source": "external-api"
+        }
+    }
+    
+    rectangle "Filtered Person Data" as FPD {
+        json "Person Output" as FPD_JSON {
+            "first_name": "Jean",
+            "last_name": "Dupont",
+            "creation_date": "2025-08-19T09:25:30.135028Z"
+        }
+    }
+}
+
+JP_JSON --> JTP : Input
+JTP --> TJP_JSON : Transform
+
+PD_JSON --> PDP : Input  
+PDP --> FPD_JSON : Filter & Transform
+
+@enduml

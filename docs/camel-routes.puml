@@ -1,0 +1,53 @@
+@startuml Camel_Routes_Flow
+!theme plain
+title Apache Camel Routes Flow Diagram
+
+start
+
+:Timer (30 seconds);
+note right: Automatic trigger every 30 seconds
+
+:Log: Start JSON data retrieval;
+
+:HTTP GET Request;
+note right: https://jsonplaceholder.typicode.com/posts/1
+
+:Log: Data retrieved;
+
+:JsonTransformProcessor;
+note right
+Transform JSON:
+- originalId
+- transformedTitle (UPPERCASE)
+- summary (truncated)
+- userId
+- transformationTimestamp
+- source
+end note
+
+:Log: Data transformed;
+
+:Send to direct:processTransformedData;
+
+partition "Process Transformed Data Route" {
+    :Log: Processing transformed data;
+    
+    :Add headers;
+    note right
+    - ProcessedAt: timestamp
+    - DataLength: data size
+    end note
+    
+    :Log: Final data and headers;
+}
+
+stop
+
+note bottom
+**Manual Transform Route**
+Can be triggered via POST /api/camel/transform
+Uses the same transformation logic
+but fetches from posts/2
+end note
+
+@enduml
