@@ -47,9 +47,14 @@ cd /Users/matthieudebray/dev/java/camel
 # Vérifier que l'application fonctionne
 curl http://localhost:8080/api/alive
 
-# Tester l'intégration des données personnelles avec différents IDs
+# Tester l'intégration des données personnelles (JSON/REST par défaut)
 curl http://localhost:8080/api/camel/person/1
-curl http://localhost:8080/api/camel/person/42
+
+# Tester avec l'API SOAP/XML pour données employés
+curl "http://localhost:8080/api/camel/person/1?type=soap"
+
+# Tester avec différents IDs et types
+curl "http://localhost:8080/api/camel/person/42?type=json"
 
 # Voir les routes Camel actives
 curl http://localhost:8080/api/camel/routes
@@ -65,11 +70,12 @@ camel/
 │   │   ├── HealthController.java          # Endpoints de santé
 │   │   ├── ApiController.java             # APIs générales
 │   │   └── CamelController.java           # Gestion des routes Camel
-│   ├── route/
-│   │   └── JsonTransformRoute.java        # Routes de transformation
+│   ├── config/
+│   │   └── CamelRouteConfig.java          # Configuration routes Camel
 │   └── processor/
-│       ├── JsonTransformProcessor.java    # Transformation JSONPlaceholder
-│       └── PersonDataProcessor.java       # Filtrage données personnelles
+│       ├── PersonDataProcessor.java       # Filtrage données personnelles JSON
+│       ├── SoapRequestProcessor.java      # Génération requêtes SOAP
+│       └── SoapResponseProcessor.java     # Traitement réponses SOAP
 ├── src/test/java/                         # Tests unitaires
 ├── docs/                                  # Documentation PlantUML
 ├── target/                               # JAR compilé
@@ -85,33 +91,64 @@ camel/
 - `GET /actuator/health` - Endpoint Spring Boot Actuator
 
 ### Intégration Camel
-- `POST /api/camel/transform` - Transformation JSON manuelle
-- `GET /api/camel/person/{id}` - Récupération et filtrage des données personnelles
-- `GET /api/camel/routes` - Liste des routes Camel
+- `GET /api/camel/person/{id}` - Récupération de données avec sélection de source
+  - `?type=json` (défaut) - Données personnelles via REST/JSON
+  - `?type=soap` ou `?type=xml` - Données employés via SOAP/XML
+- `GET /api/camel/routes` - Liste des routes Camel actives
 - `POST /api/camel/routes/{routeId}/start` - Démarrer une route
 - `POST /api/camel/routes/{routeId}/stop` - Arrêter une route
 
 ## 🔄 Intégrations API Externes
 
-### API JSONPlaceholder
-- **URL** : `https://jsonplaceholder.typicode.com/posts/{id}`
-- **Usage** : Démonstration de transformation de données
-- **Traitement** : Transformation du titre, génération de résumé, ajout de métadonnées
-
-### API Person Data
+### 📊 API REST/JSON - Données Personnelles
 - **URL** : `http://localhost:8001/person_data/{id}`
 - **Méthode** : GET
-- **Usage** : Intégration de données personnelles réelles avec ID dynamique
+- **Usage** : Récupération de données personnelles avec ID dynamique
 - **Filtrage** : Extraction de `first_name`, `last_name`, et `creation_date`
 
 **Exemples d'appels :**
-- `/api/camel/person/1` → `GET http://localhost:8001/person_data/1`
-- `/api/camel/person/42` → `GET http://localhost:8001/person_data/42`
+- `/api/camel/person/1?type=json` → `GET http://localhost:8001/person_data/1`
+- `/api/camel/person/42` → `GET http://localhost:8001/person_data/42` (défaut)
 
 **Exemple de réponse filtrée :**
 ```json
 {
   "first_name": "Person1",
+  "last_name": "Doe1", 
+  "creation_date": "2025-08-19T09:25:30.135028Z"
+}
+```
+
+### 🧼 API SOAP/XML - Données Employés
+- **URL** : `http://localhost:8001/soap/PersonService`
+- **Méthode** : POST (SOAP 1.2)
+- **Usage** : Récupération de données employés avec informations professionnelles
+- **Traitement** : Génération requête SOAP, parsing réponse XML
+
+**Exemples d'appels :**
+- `/api/camel/person/1?type=soap` → `POST http://localhost:8001/soap/PersonService`
+- `/api/camel/person/42?type=xml` → `POST http://localhost:8001/soap/PersonService`
+
+**Exemple de réponse filtrée :**
+```json
+{
+  "full_name": "Alexandre Sophie",
+  "department": "IT",
+  "position": "Developer",
+  "salary": "47500",
+  "hire_date": "2020-02-15",
+  "office": "Building 2, Floor 2"
+}
+```
+
+### 📋 Sélection du Type d'API
+
+L'endpoint `/api/camel/person/{id}` supporte un paramètre `type` pour sélectionner la source de données :
+
+- **`type=json`** (défaut) : API REST JSON avec données personnelles
+- **`type=soap`** ou **`type=xml`** : API SOAP XML avec données employés
+
+Les deux APIs utilisent des routes Camel distinctes avec des processeurs spécialisés pour chaque protocole.
   "last_name": "Doe1", 
   "creation_date": "2025-08-19T09:25:30.135028Z"
 }
@@ -145,17 +182,20 @@ SPRING_PROFILES=production ./run.sh start
 
 ## 📊 Routes Apache Camel
 
-### Route Automatique (Timer)
-- **Déclenchement** : Toutes les 30 secondes
-- **Source** : API JSONPlaceholder
-- **Traitement** : Transformation et enrichissement
-- **Destination** : Logs et pipeline interne
+### Route Person Data (JSON)
+- **Nom** : `person-data-route`
+- **Déclenchement** : Appel REST `GET /api/camel/person/{id}?type=json`
+- **Source** : API REST JSON `http://localhost:8001/person_data/{id}`
+- **Traitement** : Filtrage des champs personnels via `PersonDataProcessor`
+- **Destination** : Réponse HTTP JSON directe
 
-### Route Manuelle (REST)
-- **Déclenchement** : Appel REST `GET /api/camel/person/{id}`
-- **Source** : API Person Data locale avec ID dynamique
-- **Traitement** : Filtrage et formatage JSON
-- **Destination** : Réponse HTTP directe
+### Route SOAP Person Data (XML)
+- **Nom** : `soap-person-data-route`
+- **Déclenchement** : Appel REST `GET /api/camel/person/{id}?type=soap`
+- **Source** : API SOAP XML `http://localhost:8001/soap/PersonService`  
+- **Traitement** : Génération requête SOAP → Parsing réponse XML → Extraction données employé
+- **Processeurs** : `SoapRequestProcessor` et `SoapResponseProcessor`
+- **Destination** : Réponse HTTP JSON avec données employé
 
 ## 📚 Documentation
 
@@ -261,12 +301,12 @@ management:
 ## 🚀 Patterns d'Intégration Entreprise
 
 Ce projet démontre plusieurs patterns EIP :
-- **Message Router** : Routage conditionnel
-- **Message Translator** : Transformation de format
-- **Content Filter** : Filtrage de champs
-- **Message Enricher** : Ajout de métadonnées
-- **Polling Consumer** : Consommation basée timer
-- **Request-Reply** : Traitement synchrone
+- **Message Router** : Routage conditionnel basé sur le paramètre `type`
+- **Message Translator** : Transformation JSON→JSON et XML→JSON  
+- **Content Filter** : Filtrage de champs spécifiques par API
+- **Message Enricher** : Ajout de métadonnées de traitement
+- **Protocol Adapter** : Support REST et SOAP dans une même interface
+- **Request-Reply** : Traitement synchrone multi-protocole
 
 ## 🔮 Améliorations Futures
 

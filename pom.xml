@@ -101,6 +101,13 @@
             <artifactId>camel-direct-starter</artifactId>
             <version>4.2.0</version>
         </dependency>
+
+        <!-- Camel YAML DSL for route configuration -->
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-yaml-dsl</artifactId>
+            <version>4.2.0</version>
+        </dependency>
     </dependencies>
 
     <build>

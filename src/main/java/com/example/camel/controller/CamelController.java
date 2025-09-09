@@ -19,46 +19,41 @@ public class CamelController {
     @Autowired
     private CamelContext camelContext;
 
-    @PostMapping("/transform")
-    public ResponseEntity<Map<String, Object>> triggerTransform() {
-        try {
-            // Déclenche la route de transformation manuelle
-            String result = producerTemplate.requestBody("direct:manualTransform", "", String.class);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "Transformation déclenchée avec succès");
-            response.put("transformedData", result);
-            response.put("timestamp", System.currentTimeMillis());
-            
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("status", "error");
-            errorResponse.put("message", "Erreur lors de la transformation: " + e.getMessage());
-            errorResponse.put("timestamp", System.currentTimeMillis());
-            
-            return ResponseEntity.status(500).body(errorResponse);
-        }
-    }
-
     @GetMapping("/person/{id}")
-    public ResponseEntity<Map<String, Object>> getPersonData(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> getPersonData(
+            @PathVariable String id,
+            @RequestParam(value = "type", defaultValue = "json") String type) {
         try {
-            // Déclenche la route de récupération des données de personne avec l'ID
-            String result = producerTemplate.requestBody("direct:personData", id, String.class);
+            String result;
+            String routeName;
+            String dataType;
+            
+            // Select route based on type parameter
+            if ("xml".equalsIgnoreCase(type) || "soap".equalsIgnoreCase(type)) {
+                // Trigger SOAP/XML route
+                result = producerTemplate.requestBody("direct:soapPersonData", id, String.class);
+                routeName = "soapPersonData";
+                dataType = "XML/SOAP";
+            } else {
+                // Default to JSON route
+                result = producerTemplate.requestBody("direct:personData", id, String.class);
+                routeName = "personData";
+                dataType = "JSON/REST";
+            }
             
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
-            response.put("message", "Données de personne récupérées avec succès pour l'ID: " + id);
+            response.put("message", "Person data retrieved successfully for ID: " + id + " using " + dataType + " API");
             response.put("data", result);
+            response.put("route", routeName);
+            response.put("dataType", dataType);
             response.put("timestamp", System.currentTimeMillis());
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("status", "error");
-            errorResponse.put("message", "Erreur lors de la récupération des données pour l'ID " + id + ": " + e.getMessage());
+            errorResponse.put("message", "Error retrieving data for ID " + id + ": " + e.getMessage());
             errorResponse.put("timestamp", System.currentTimeMillis());
             
             return ResponseEntity.status(500).body(errorResponse);
@@ -93,12 +88,12 @@ public class CamelController {
             camelContext.getRouteController().startRoute(routeId);
             Map<String, String> response = new HashMap<>();
             response.put("status", "success");
-            response.put("message", "Route " + routeId + " démarrée avec succès");
+            response.put("message", "Route " + routeId + " started successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("status", "error");
-            errorResponse.put("message", "Erreur lors du démarrage de la route: " + e.getMessage());
+            errorResponse.put("message", "Error starting route: " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);
         }
     }
@@ -109,12 +104,12 @@ public class CamelController {
             camelContext.getRouteController().stopRoute(routeId);
             Map<String, String> response = new HashMap<>();
             response.put("status", "success");
-            response.put("message", "Route " + routeId + " arrêtée avec succès");
+            response.put("message", "Route " + routeId + " stopped successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("status", "error");
-            errorResponse.put("message", "Erreur lors de l'arrêt de la route: " + e.getMessage());
+            errorResponse.put("message", "Error stopping route: " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);
         }
     }
