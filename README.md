@@ -83,34 +83,40 @@ camel/
 └── generate-diagrams.sh                 # Génération documentation
 ```
 
-## 🔗 Endpoints API
+## 🔗 API Endpoints
 
-### Santé et Statut
-- `GET /api/alive` - Vérification de vie de l'application
-- `GET /api/health` - Statut détaillé de santé
-- `GET /actuator/health` - Endpoint Spring Boot Actuator
+### Health and Status
+- `GET /api/alive` - Application liveness check
+- `GET /api/health` - Detailed health status
+- `GET /actuator/health` - Spring Boot Actuator endpoint
 
-### Intégration Camel
-- `GET /api/camel/person/{id}` - Récupération de données avec sélection de source
-  - `?type=json` (défaut) - Données personnelles via REST/JSON
-  - `?type=soap` ou `?type=xml` - Données employés via SOAP/XML
-- `GET /api/camel/routes` - Liste des routes Camel actives
-- `POST /api/camel/routes/{routeId}/start` - Démarrer une route
-- `POST /api/camel/routes/{routeId}/stop` - Arrêter une route
+### Camel Integration
+- `GET /api/camel/person/{id}` - Data retrieval with source selection
+  - `?type=json` (default) - Personal data via REST/JSON
+  - `?type=soap` or `?type=xml` - Employee data via SOAP/XML
+- `GET /api/camel/routes` - List active Camel routes
+- `POST /api/camel/routes/{routeId}/start` - Start a route
+- `POST /api/camel/routes/{routeId}/stop` - Stop a route
 
-## 🔄 Intégrations API Externes
+### Request Logging and Monitoring
+- All API requests are automatically logged with detailed metrics
+- Log format includes: timestamp, URL, parameters, HTTP status, execution time
+- Logs are available in both console output and `logs/camel-requests.log`
+- Real-time monitoring: `tail -f logs/camel-requests.log`
 
-### 📊 API REST/JSON - Données Personnelles
-- **URL** : `http://localhost:8001/person_data/{id}`
-- **Méthode** : GET
-- **Usage** : Récupération de données personnelles avec ID dynamique
-- **Filtrage** : Extraction de `first_name`, `last_name`, et `creation_date`
+## 🔄 External API Integrations
 
-**Exemples d'appels :**
+### 📊 REST/JSON API - Personal Data
+- **URL**: `http://localhost:8001/person_data/{id}`
+- **Method**: GET
+- **Usage**: Personal data retrieval with dynamic ID
+- **Filtering**: Extracts `first_name`, `last_name`, and `creation_date`
+
+**Example calls:**
 - `/api/camel/person/1?type=json` → `GET http://localhost:8001/person_data/1`
-- `/api/camel/person/42` → `GET http://localhost:8001/person_data/42` (défaut)
+- `/api/camel/person/42` → `GET http://localhost:8001/person_data/42` (default)
 
-**Exemple de réponse filtrée :**
+**Filtered response example:**
 ```json
 {
   "first_name": "Person1",
@@ -119,17 +125,17 @@ camel/
 }
 ```
 
-### 🧼 API SOAP/XML - Données Employés
-- **URL** : `http://localhost:8001/soap/PersonService`
-- **Méthode** : POST (SOAP 1.2)
-- **Usage** : Récupération de données employés avec informations professionnelles
-- **Traitement** : Génération requête SOAP, parsing réponse XML
+### 🧼 SOAP/XML API - Employee Data
+- **URL**: `http://localhost:8001/soap/PersonService`
+- **Method**: POST (SOAP 1.2)
+- **Usage**: Employee data retrieval with professional information
+- **Processing**: SOAP request generation, XML response parsing
 
-**Exemples d'appels :**
+**Example calls:**
 - `/api/camel/person/1?type=soap` → `POST http://localhost:8001/soap/PersonService`
 - `/api/camel/person/42?type=xml` → `POST http://localhost:8001/soap/PersonService`
 
-**Exemple de réponse filtrée :**
+**Filtered response example:**
 ```json
 {
   "full_name": "Alexandre Sophie",
@@ -141,14 +147,14 @@ camel/
 }
 ```
 
-### 📋 Sélection du Type d'API
+### 📋 API Type Selection
 
-L'endpoint `/api/camel/person/{id}` supporte un paramètre `type` pour sélectionner la source de données :
+The `/api/camel/person/{id}` endpoint supports a `type` parameter to select the data source:
 
-- **`type=json`** (défaut) : API REST JSON avec données personnelles
-- **`type=soap`** ou **`type=xml`** : API SOAP XML avec données employés
+- **`type=json`** (default): REST JSON API with personal data
+- **`type=soap`** or **`type=xml`**: SOAP XML API with employee data
 
-Les deux APIs utilisent des routes Camel distinctes avec des processeurs spécialisés pour chaque protocole.
+Both APIs use distinct Camel routes with specialized processors for each protocol.
   "last_name": "Doe1", 
   "creation_date": "2025-08-19T09:25:30.135028Z"
 }
@@ -180,45 +186,133 @@ SERVER_PORT=8081 ./run.sh start
 SPRING_PROFILES=production ./run.sh start
 ```
 
-## 📊 Routes Apache Camel
+## 📊 Apache Camel Routes
 
-### Route Person Data (JSON)
-- **Nom** : `person-data-route`
-- **Déclenchement** : Appel REST `GET /api/camel/person/{id}?type=json`
-- **Source** : API REST JSON `http://localhost:8001/person_data/{id}`
-- **Traitement** : Filtrage des champs personnels via `PersonDataProcessor`
-- **Destination** : Réponse HTTP JSON directe
+### Person Data Route (JSON)
+- **Name**: `person-data-route`
+- **Trigger**: REST call `GET /api/camel/person/{id}?type=json`
+- **Source**: REST JSON API `http://localhost:8001/person_data/{id}`
+- **Processing**: Personal field filtering via `PersonDataProcessor`
+- **Destination**: Direct HTTP JSON response
 
-### Route SOAP Person Data (XML)
-- **Nom** : `soap-person-data-route`
-- **Déclenchement** : Appel REST `GET /api/camel/person/{id}?type=soap`
-- **Source** : API SOAP XML `http://localhost:8001/soap/PersonService`  
-- **Traitement** : Génération requête SOAP → Parsing réponse XML → Extraction données employé
-- **Processeurs** : `SoapRequestProcessor` et `SoapResponseProcessor`
-- **Destination** : Réponse HTTP JSON avec données employé
+### SOAP Person Data Route (XML)
+- **Name**: `soap-person-data-route`
+- **Trigger**: REST call `GET /api/camel/person/{id}?type=soap`
+- **Source**: SOAP XML API `http://localhost:8001/soap/PersonService`  
+- **Processing**: SOAP request generation → XML response parsing → Employee data extraction
+- **Processors**: `SoapRequestProcessor` and `SoapResponseProcessor`
+- **Destination**: HTTP JSON response with employee data
+
+## 📝 Request Logging System
+
+### Comprehensive Request Tracking
+All API requests are automatically logged with detailed metrics:
+
+**Log Format:**
+```
+REQUEST_START | [timestamp] | [method] | [url] | Parameters: [params] | RequestId: [id]
+REQUEST_END | [timestamp] | [status] | [url] | HTTP [code] | [duration]ms | [size]B | [params] | RequestId: [id]
+REQUEST_SUMMARY | StartTime: [start] | EndTime: [end] | URL: [url] | Params: [params] | HTTPCode: [code] | Duration: [duration]ms | Size: [size]B | Status: [status] | RequestId: [id]
+```
+
+**Example Log Entry:**
+```
+2025-09-13 15:29:13.850 | REQUEST_START | 2025-09-13 15:29:13.850 | INTERNAL |   | Parameters: personId=1, type=json | RequestId: 10C3ECB31CC3231-0000000000000000
+2025-09-13 15:29:14.001 | REQUEST_END | 2025-09-13 15:29:14.001 | SUCCESS |  | HTTP 200 | 151ms | 89B | personId=1, type=json | RequestId: 10C3ECB31CC3231-0000000000000000
+```
+
+### Log Files and Monitoring
+- **Console Output**: Real-time logging in application console
+- **File Output**: `logs/camel-requests.log` with automatic rotation
+- **Retention**: 30 days history, 100MB per file, 3GB total cap
+- **Real-time Monitoring**: `tail -f logs/camel-requests.log`
+
+### Log Analysis Commands
+```bash
+# View all requests
+cat logs/camel-requests.log
+
+# Filter by HTTP status
+grep 'HTTP 200' logs/camel-requests.log
+
+# Filter by execution time over 100ms
+grep -E 'Duration: [1-9][0-9]{2,}ms' logs/camel-requests.log
+
+# Count total requests
+grep 'REQUEST_START' logs/camel-requests.log | wc -l
+
+# Monitor real-time
+tail -f logs/camel-requests.log
+```
 
 ## 📚 Documentation
 
-### Diagrammes PlantUML
-Documentation complète avec diagrammes :
-- Architecture système
-- Séquences d'interaction
-- Composants et dépendances
-- Flux de données
-- Spécifications API
+## 📚 Documentation
+
+### PlantUML Diagrams
+Complete documentation with diagrams:
+- System architecture
+- Interaction sequences
+- Components and dependencies
+- Data flows
+- API specifications
 
 ```bash
-# Générer tous les diagrammes
+# Generate all diagrams
 ./run.sh docs
 
-# Ou manuellement
+# Or manually
 ./generate-diagrams.sh
 ```
 
-### Documentation Technique
-- **`docs/PROJECT_DOCUMENTATION.md`** - Documentation complète du projet
-- **Diagrammes PlantUML** - Architecture et flux
-- **Commentaires Code** - Javadoc et commentaires inline
+### Technical Documentation
+- **`docs/PROJECT_DOCUMENTATION.md`** - Complete project documentation
+- **PlantUML Diagrams** - Architecture and flows
+- **Code Comments** - Javadoc and inline comments
+
+## 🧪 Testing
+
+### Test Execution
+```bash
+# Run all tests
+mvn test
+
+# Run tests with coverage
+mvn test jacoco:report
+
+# Or via script
+./run.sh test
+```
+
+### Coverage
+- **Unit Tests**: Controllers, Processors, Routes
+- **Integration Tests**: Spring Boot, Camel Context
+- **Transformation Tests**: JSON processing, filtering
+
+### Request Logging Testing
+```bash
+# Test logging system
+./test-logging.sh
+
+# Manual testing
+curl "http://localhost:8080/api/camel/person/1?type=json"
+curl "http://localhost:8080/api/camel/person/2?type=soap"
+```
+
+## 🏗️ Build and Deployment
+
+### Build Process
+```bash
+# Standard build
+mvn clean package
+
+# Or via script
+./run.sh build
+```
+
+### Generated JAR
+- **File**: `target/camel-springboot-app-1.0.0.jar`
+- **Size**: ~32 MB
 
 ## 🧪 Tests
 
@@ -250,27 +344,27 @@ mvn clean package
 ### JAR Produit
 - **Fichier** : `target/camel-springboot-app-1.0.0.jar`
 - **Taille** : ~32 MB
-- **Type** : JAR exécutable Spring Boot
-- **Java** : Nécessite Java 17+
+- **Type**: Executable Spring Boot JAR
+- **Java**: Requires Java 17+
 
-### Déploiement
+### Deployment
 ```bash
-# Démarrage direct
+# Direct startup
 java -jar target/camel-springboot-app-1.0.0.jar
 
-# Avec configuration
+# With configuration
 java -jar target/camel-springboot-app-1.0.0.jar --server.port=8081
 ```
 
 ## ⚙️ Configuration
 
-### Profils Spring
-- **Default** : Configuration standard
-- **Dev** : Logs détaillés, tous les endpoints actuator
-- **Test** : Configuration minimale pour tests
-- **Production** : Optimisé pour déploiement
+### Spring Profiles
+- **Default**: Standard configuration
+- **Dev**: Detailed logs, all actuator endpoints
+- **Test**: Minimal configuration for testing
+- **Production**: Optimized for deployment
 
-### Propriétés Principales
+### Main Properties
 ```yaml
 server:
   port: 8080
@@ -279,67 +373,113 @@ camel:
   springboot:
     main-run-controller: true
 
+person:
+  api:
+    base-url: http://localhost:8001
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info,camel
+
+# Logging configuration (logback-spring.xml)
+logging:
+  file:
+    name: logs/camel-requests.log
+  level:
+    REQUEST_LOGGER: INFO
 ```
 
-## 🔍 Monitoring et Observabilité
+## 🔍 Monitoring and Observability
 
 ### Health Checks
-- Spring Boot Actuator intégré
-- Endpoints de santé personnalisés
-- Monitoring des routes Camel
+- Integrated Spring Boot Actuator
+- Custom health endpoints
+- Camel routes monitoring
 
-### Logs
-- Logs structurés avec niveaux
-- Informations de traitement Camel
-- Traces des appels API externes
+### Logging System
+- **Structured Logging**: Multi-level logging with detailed request tracking
+- **Request Logging**: Complete request lifecycle with timestamps, parameters, and performance metrics
+- **File Rotation**: Automatic log rotation with configurable retention
+- **Real-time Monitoring**: Console and file output for live debugging
 
-## 🚀 Patterns d'Intégration Entreprise
+### Log Levels and Categories
+```yaml
+# Main application logs
+logging.level.com.example.camel: INFO
 
-Ce projet démontre plusieurs patterns EIP :
-- **Message Router** : Routage conditionnel basé sur le paramètre `type`
-- **Message Translator** : Transformation JSON→JSON et XML→JSON  
-- **Content Filter** : Filtrage de champs spécifiques par API
-- **Message Enricher** : Ajout de métadonnées de traitement
-- **Protocol Adapter** : Support REST et SOAP dans une même interface
-- **Request-Reply** : Traitement synchrone multi-protocole
+# Request tracking logs  
+logging.level.REQUEST_LOGGER: INFO
 
-## 🔮 Améliorations Futures
+# Camel framework logs
+logging.level.org.apache.camel: INFO
+logging.level.org.apache.camel.component.http: DEBUG
+```
 
-### Intégrations Additionnelles
-- Connectivité base de données avec JPA
-- Intégration files de messages (RabbitMQ, Kafka)
-- Traitement de fichiers
-- Services de notification
+### Monitoring Endpoints
+- `GET /actuator/health` - Application health status
+- `GET /actuator/info` - Application information
+- `GET /actuator/camel` - Camel routes and metrics
+- `GET /actuator/loggers` - Dynamic log level management
 
-### Fonctionnalités Avancées
-- Patterns Circuit Breaker
-- Mécanismes de retry
-- Pipelines de transformation
-- Architecture événementielle
+## 🚀 Enterprise Integration Patterns
 
-### Monitoring Avancé
-- Métriques Prometheus
-- Tracing distribué
-- Indicateurs de santé personnalisés
-- Monitoring de performance
+This project demonstrates several EIP patterns:
+- **Message Router**: Conditional routing based on `type` parameter
+- **Message Translator**: JSON→JSON and XML→JSON transformation  
+- **Content Filter**: API-specific field filtering
+- **Message Enricher**: Processing metadata addition
+- **Protocol Adapter**: REST and SOAP support in unified interface
+- **Request-Reply**: Multi-protocol synchronous processing
 
-## 📄 Licence
+## 🔮 Future Enhancements
 
-Ce projet est un exemple de démonstration pour l'intégration Spring Boot + Apache Camel.
+### Additional Integrations
+- Database connectivity with JPA
+- Message queue integration (RabbitMQ, Kafka)
+- File processing capabilities
+- Notification services
+
+### Advanced Features
+- Circuit Breaker patterns
+- Retry mechanisms with exponential backoff
+- Advanced transformation pipelines
+- Event-driven architecture
+- Distributed tracing integration
+- Performance metrics and alerting
+
+## 📄 License
+
+This project is a demonstration example for Spring Boot + Apache Camel integration.
 
 ## 🤝 Support
 
-Pour des questions ou des problèmes :
-1. Vérifiez les logs de l'application
-2. Testez les endpoints de santé
-3. Consultez la documentation PlantUML
-4. Utilisez `./run.sh check` pour diagnostiquer
+For questions or issues:
+1. Check application logs in `logs/camel-requests.log`
+2. Test health endpoints
+3. Consult PlantUML documentation
+4. Use `./run.sh check` for diagnostics
+5. Monitor request logs: `tail -f logs/camel-requests.log`
+
+## 📋 Quick Start Commands
+
+```bash
+# Build and run with logging
+mvn clean package -DskipTests
+java -jar target/camel-springboot-app-1.0.0.jar &
+
+# Test APIs with logging
+curl "http://localhost:8080/api/camel/person/1?type=json"
+curl "http://localhost:8080/api/camel/person/2?type=soap"
+
+# Monitor request logs
+tail -f logs/camel-requests.log
+
+# Run test suite
+./test-logging.sh
+```
 
 ---
 
-**Projet créé avec ❤️ en utilisant Spring Boot 3 et Apache Camel 4.2.0**
+**Project created with ❤️ using Spring Boot 3 and Apache Camel 4.2.0**

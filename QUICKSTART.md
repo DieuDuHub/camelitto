@@ -1,86 +1,119 @@
-# 📋 Guide de Démarrage Rapide
+# 📋 Quick Start Guide
 
-## 🎯 Commandes Essentielles
+## 🎯 Essential Commands
 
-### Démarrage de l'Application
+### Application Startup
 ```bash
-# Démarrage simple (recommandé)
+# Simple startup (recommended)
 ./run.sh start
 
-# Mode développement (logs détaillés)
+# Development mode (detailed logs)
 ./run.sh dev
 
-# Construction puis démarrage
+# Build then start
 ./run.sh build && ./run.sh start
 ```
 
-### Test de l'Application
+### Application Testing
 ```bash
-# Vérifier que l'app fonctionne
+# Verify app is running
 curl http://localhost:8080/api/alive
 
-# Tester l'intégration Person Data
+# Test Person Data integration (JSON)
 curl http://localhost:8080/api/camel/person/1
 
-# Tester avec différents IDs
+# Test SOAP integration
+curl "http://localhost:8080/api/camel/person/1?type=soap"
+
+# Test with different IDs
 curl http://localhost:8080/api/camel/person/42
 
-# Voir les routes Camel
+# View Camel routes
 curl http://localhost:8080/api/camel/routes
 
-# Health check automatique
+# Automatic health check
 ./run.sh check
+
+# Test request logging system
+./test-logging.sh
 ```
 
-### Gestion de l'Application
+### Application Management
 ```bash
-# Arrêter l'application
+# Stop application
 ./run.sh stop
 
-# Nettoyer et reconstruire
+# Clean and rebuild
 ./run.sh clean
 
-# Générer la documentation
+# Generate documentation
 ./run.sh docs
+
+# Monitor request logs
+tail -f logs/camel-requests.log
 ```
 
-## 🔗 Endpoints Principaux
+## 🔗 Main Endpoints
 
-| Endpoint | Méthode | Description |
+| Endpoint | Method | Description |
 |----------|---------|-------------|
-| `/api/alive` | GET | Test de vie |
-| `/api/health` | GET | Statut détaillé |
-| `/api/camel/person/{id}` | GET | Données personnelles filtrées |
-| `/api/camel/transform` | POST | Transformation JSON |
-| `/api/camel/routes` | GET | Liste des routes |
+| `/api/alive` | GET | Liveness test |
+| `/api/health` | GET | Detailed status |
+| `/api/camel/person/{id}` | GET | Filtered personal data (JSON/SOAP) |
+| `/api/camel/person/{id}?type=json` | GET | JSON personal data |
+| `/api/camel/person/{id}?type=soap` | GET | SOAP employee data |
+| `/api/camel/routes` | GET | Active routes list |
 
-## 📊 Statut du Projet
+## 📊 Project Status
 
-✅ **Application Spring Boot 3** - Fonctionnelle  
-✅ **Intégration Apache Camel** - 4 routes actives  
-✅ **API Person Data** - Filtrage first_name, last_name, creation_date  
-✅ **Tests Complets** - 6 tests passants  
-✅ **Documentation PlantUML** - 6 diagrammes  
-✅ **JAR Exécutable** - 32 MB prêt pour déploiement  
-✅ **Script de Démarrage** - Interface simple  
+✅ **Spring Boot 3 Application** - Functional  
+✅ **Apache Camel Integration** - 2 active routes  
+✅ **JSON API** - Filters first_name, last_name, creation_date  
+✅ **SOAP API** - Employee data with professional info  
+✅ **Request Logging** - Complete request tracking system  
+✅ **Comprehensive Tests** - Unit and integration tests  
+✅ **PlantUML Documentation** - Architecture diagrams  
+✅ **Executable JAR** - 32MB ready for deployment  
+✅ **Startup Scripts** - Simple interface  
 
-## 🚀 Résumé Technique
+## 🚀 Technical Summary
 
-- **Framework** : Spring Boot 3.2.0 + Apache Camel 4.2.0
-- **Java** : Version 17+
-- **Build** : Maven 3.6+
-- **Taille JAR** : ~32 MB
-- **Port** : 8080 (configurable)
-- **Routes Camel** : 4 routes (timer + manual + person + direct)
+- **Framework**: Spring Boot 3.2.0 + Apache Camel 4.2.0
+- **Java**: Version 17+
+- **Build**: Maven 3.6+
+- **JAR Size**: ~32 MB
+- **Port**: 8080 (configurable)
+- **Camel Routes**: 2 routes (JSON + SOAP)
+- **Logging**: File-based request tracking with rotation
 
-## 🎉 Projet Complété !
+## 📝 Request Logging Features
 
-L'application est maintenant complètement fonctionnelle avec toutes les fonctionnalités demandées :
+- **Complete Request Tracking**: Every API call logged with full details
+- **Performance Metrics**: Execution time, response size, HTTP status
+- **File Rotation**: Automatic log rotation (100MB files, 30 days retention)
+- **Real-time Monitoring**: Live log monitoring capabilities
+- **Structured Format**: Easy parsing and analysis
 
-1. **JAR Spring Boot 3** standard ✅
-2. **Connecteur REST HTTP** avec API alive ✅  
-3. **Route Apache Camel** pour transformation JSON ✅
-4. **API Person Data** avec filtrage spécifique ✅
+```bash
+# Monitor requests in real-time
+tail -f logs/camel-requests.log
+
+# Analyze request patterns
+grep "REQUEST_SUMMARY" logs/camel-requests.log
+
+# Test logging system
+./test-logging.sh
+```
+
+## 🎉 Project Completed!
+
+The application is now fully functional with all requested features:
+
+1. **Spring Boot 3 JAR** standard ✅
+2. **HTTP REST connector** with alive API ✅  
+3. **Apache Camel routes** for JSON transformation ✅
+4. **Dual API support** JSON/REST + SOAP/XML ✅
+5. **Request logging system** with comprehensive tracking ✅
 5. **Documentation PlantUML** complète ✅
 
 **Commande finale recommandée :**

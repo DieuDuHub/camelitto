@@ -28,15 +28,28 @@ public class CamelController {
             String routeName;
             String dataType;
             
+            // Create a map to store request context for logging
+            Map<String, Object> requestContext = new HashMap<>();
+            requestContext.put("personId", id);
+            requestContext.put("type", type);
+            requestContext.put("endpoint", "/api/camel/person/" + id);
+            requestContext.put("method", "GET");
+            
             // Select route based on type parameter
             if ("xml".equalsIgnoreCase(type) || "soap".equalsIgnoreCase(type)) {
                 // Trigger SOAP/XML route
-                result = producerTemplate.requestBody("direct:soapPersonData", id, String.class);
+                Map<String, Object> headers = new HashMap<>();
+                headers.put("personId", id);
+                headers.put("type", type);
+                result = producerTemplate.requestBodyAndHeaders("direct:soapPersonData", id, headers, String.class);
                 routeName = "soapPersonData";
                 dataType = "XML/SOAP";
             } else {
                 // Default to JSON route
-                result = producerTemplate.requestBody("direct:personData", id, String.class);
+                Map<String, Object> headers = new HashMap<>();
+                headers.put("personId", id);
+                headers.put("type", type);
+                result = producerTemplate.requestBodyAndHeaders("direct:personData", id, headers, String.class);
                 routeName = "personData";
                 dataType = "JSON/REST";
             }
